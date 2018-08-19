@@ -1,1 +1,2 @@
-# pytorch-segnet-implementation
+# pytorch-semseg-implementation  
+This repository for personal study about semantic-segmentation.
