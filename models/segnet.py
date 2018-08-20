@@ -42,6 +42,38 @@ class segnet(nn.Module):
 
         return outputs
 
+    def init_vgg16bn_params(self, vgg16bn):
+        # extract the vgg16_bn layer without ReLU
+        vgg16bn_features = list(vgg16bn.features.children())
+        vgg16bn_layers = []
+        for layer in features:
+            if not isinstance(layer, nn.ReLU):
+                vgg16bn_layers.append(layer)
+
+        # extract the segnet encoder layer without ReLU
+        target_layers = []
+        blocks = [self.encoder1,
+                  self.encoder2,
+                  self.encoder3,
+                  self.encoder4,
+                  self.encoder5]
+        for idx, block in enumerate(blocks):
+            if idx < 2:
+                units = [block.conv1.unit, block.conv2.unit]
+            else:
+                units = [block.conv1.unit, block.conv2.unit, block.conv3.unit]
+
+            for unit in units:
+                for layer in unit:
+                    if not isinstance(layer, nn.ReLU):
+                        target_layers.append(layer)
+
+        assert len(vgg16bn_layers) == len(target_layers), "Found a segnet and pre-trained model size mismatch."
+        # adapt the pre-trained weights and biases
+        for target_layer, vgg16bn_layer in zip(target_layers, vgg16bn_layers):
+            target_layer.weight.data = vgg16bn_layer.weight.data
+            target_layer.bias.data = vgg16bn_layer.bias.data
+
 
 class encoder_conv2(nn.Module):
     def __init__(self, in_channels, out_channels):
