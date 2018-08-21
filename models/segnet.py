@@ -19,7 +19,7 @@ class segnet(nn.Module):
         self.decoder4 = decoder_conv3(512, 256)
         self.decoder3 = decoder_conv3(256, 128)
         self.decoder2 = decoder_conv2(128, 64)
-        self.decoder1 = decoder_conv2(64, n_classes)
+        self.decoder1 = decoder_last(64, n_classes)
 
         self.softmax = nn.Softmax()
 
@@ -116,8 +116,8 @@ class decoder_conv2(nn.Module):
         super(decoder_conv2, self).__init__()
 
         self.unpool = nn.MaxUnpool2d(2)
-        self.conv1 = Conv2dBatchNormRelu(in_channels, in_channels)
-        self.conv2 = Conv2dBatchNormRelu(in_channels, out_channels)
+        self.conv1 = Conv2dBatchNormRelu(in_channels, in_channels, 3)
+        self.conv2 = Conv2dBatchNormRelu(in_channels, out_channels, 3)
 
     def forward(self, inputs, indices, output_shape):
         outputs = self.unpool(inputs, indices, output_size=output_shape)
@@ -132,14 +132,30 @@ class decoder_conv3(nn.Module):
         super(decoder_conv3, self).__init__()
 
         self.unpool = nn.MaxUnpool2d(2)
-        self.conv1 = Conv2dBatchNormRelu(in_channels, in_channels)
-        self.conv2 = Conv2dBatchNormRelu(in_channels, in_channels)
-        self.conv3 = Conv2dBatchNormRelu(in_channels, out_channels)
+        self.conv1 = Conv2dBatchNormRelu(in_channels, in_channels, 3)
+        self.conv2 = Conv2dBatchNormRelu(in_channels, in_channels, 3)
+        self.conv3 = Conv2dBatchNormRelu(in_channels, out_channels, 3)
 
     def forward(self, inputs, indices, output_shape):
         outputs = self.unpool(inputs, indices, output_size=output_shape)
         outputs = self.conv1(outputs)
         outputs = self.conv2(outputs)
         outputs = self.conv3(outputs)
+
+        return outputs
+
+
+class decoder_last(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super(decoder_last, self).__init__()
+
+        self.unpool = nn.MaxUnpool2d(2)
+        self.conv1 = Conv2dBatchNormRelu(in_channels, in_channels, 3)
+        self.conv2 = nn.Conv2d(in_channels, out_channels, 3, padding=1)
+
+    def forward(self, inputs, indices, output_shape):
+        outputs = self.unpool(inputs, indices, output_size=output_shape)
+        outputs = self.conv1(outputs)
+        outputs = self.conv2(outputs)
 
         return outputs

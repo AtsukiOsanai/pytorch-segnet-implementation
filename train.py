@@ -22,6 +22,7 @@ loss_fn = nn.CrossEntropyLoss()
 
 def train(args):
     for epoch in range(args.n_epoch):
+        # Training
         model.train()
         for i, (images, labels) in enumerate(trainloader):
             images = Variable(images)
@@ -38,7 +39,18 @@ def train(args):
             loss.backward()
             optimizer.step()
 
+        # Validation
         model.eval()
+        for i, (images, labels) in enumerate(validloader):
+            images = Variable(images)
+            labels = Variable(labels)
+            if torch.cuda.is_available():
+                images = images.cuda()
+                labels = labels.cuda()
+
+            results = model(images)
+            loss = loss_fn(results, labels)
+
 
 
 if __name__ == '__main__':
