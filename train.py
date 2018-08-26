@@ -11,9 +11,9 @@ from torchvision import datasets, models, transforms
 
 from models.segnet import segnet
 
-vgg16bn = models.vgg16_bn(pretrained=True)
+
 model = segnet()
-model.init_vgg16bn_params(vgg16bn)
+model.init_vgg16bn_params()
 if touch.cuda.is_available():
     model.cuda()
 
@@ -56,7 +56,7 @@ def train(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--arch', nargs='?', type=str, default='segnet',
-                        help='Architecture to use [\'fcn8s, unet, segnet etc\']')
+                        help='Architecture to use [\'fcn8s, segnet etc\']')
     parser.add_argument('--n_epoch', nargs='?', type=int, default='1e+4',
                         help='The number of epochs')
     args = parser.parse_args()

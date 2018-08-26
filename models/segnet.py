@@ -1,5 +1,6 @@
 import torch.nn as nn
 from network_components import *
+from torchvision import models
 
 
 class segnet(nn.Module):
@@ -42,7 +43,8 @@ class segnet(nn.Module):
 
         return outputs
 
-    def init_vgg16bn_params(self, vgg16bn):
+    def init_vgg16bn_params(self):
+        vgg16bn = models.vgg16_bn(pretrained=True)
         # extract the vgg16_bn layer without ReLU
         vgg16bn_features = list(vgg16bn.features.children())
         vgg16bn_layers = []
