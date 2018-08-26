@@ -22,7 +22,7 @@ class segnet(nn.Module):
         self.decoder2 = decoder_conv2(128, 64)
         self.decoder1 = decoder_last(64, n_classes)
 
-        self.softmax = nn.Softmax()
+        self.softmax = nn.Softmax(dim=1)
 
     def forward(self, inputs):
         # Encoder
@@ -48,7 +48,7 @@ class segnet(nn.Module):
         # extract the vgg16_bn layer without ReLU
         vgg16bn_features = list(vgg16bn.features.children())
         vgg16bn_layers = []
-        for layer in features:
+        for layer in vgg16bn_features:
             if not isinstance(layer, nn.ReLU):
                 vgg16bn_layers.append(layer)
 

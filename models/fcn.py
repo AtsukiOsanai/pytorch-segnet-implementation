@@ -23,6 +23,7 @@ class fcn(nn.Module):
             nn.Dropout2d(),
             nn.Conv2d(4096, n_classes, padding=0)
         )
+        self.softmax = nn.Softmax(dim=1)
 
         if pre_trained:
             self.init_vgg16_params()
@@ -32,7 +33,7 @@ class fcn(nn.Module):
         # extract the vgg16 layer without ReLU
         vgg16_features = list(vgg16.features.children())
         vgg16_layers = []
-        for layer in features:
+        for layer in vgg16_features:
             if not isinstance(layer, nn.ReLU):
                 vgg16_layers.append(layer)
 
@@ -84,6 +85,8 @@ class fcn32s(fcn):
             scores = nn.functinal.interpolate(
                 scores, size=inputs.size()[2:], mode='bilinear')
 
+        scores = self.softmax(scores)
+
         return scores
 
 
@@ -121,6 +124,8 @@ class fcn16s(fcn):
             scores += upsample_pool4
             scores = nn.functional.interpolate(
                 scores, size=inputs.size()[2:], mode='bilinear')
+
+        scores = self.softmax(scores)
 
         return scores
 
@@ -169,6 +174,8 @@ class fcn8s(fcn):
             scores += scores_pool3
             scores = nn.functional.interpolate(
                 scores, size=inputs.size()[2:], mode='bilinear')
+
+        scores = self.softmax(scores)
 
         return scores
 
