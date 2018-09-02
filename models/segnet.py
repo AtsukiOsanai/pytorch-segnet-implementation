@@ -61,12 +61,12 @@ class segnet(nn.Module):
                   self.encoder5]
         for idx, block in enumerate(blocks):
             if idx < 2:
-                units = [block.conv1.unit, block.conv2.unit]
+                units = [block.conv_bn_relu1, block.conv_bn_relu2]
             else:
-                units = [block.conv1.unit, block.conv2.unit, block.conv3.unit]
+                units = [block.conv_bn_relu1, block.conv_bn_relu2, block.conv_bn_relu3]
 
             for unit in units:
-                for layer in unit:
+                for layer in unit.children():
                     if not isinstance(layer, nn.ReLU):
                         target_layers.append(layer)
 
@@ -81,13 +81,13 @@ class encoder_conv2(nn.Module):
     def __init__(self, in_channels, out_channels):
         super(encoder_conv2, self).__init__()
 
-        self.conv1 = Conv2dBatchNormRelu(in_channels, out_channels, 3)
-        self.conv2 = Conv2dBatchNormRelu(out_channels, out_channels, 3)
+        self.conv_bn_relu1 = Conv2dBatchNormRelu(in_channels, out_channels, 3)
+        self.conv_bn_relu2 = Conv2dBatchNormRelu(out_channels, out_channels, 3)
         self.maxpool = nn.MaxPool2d(2, return_indices=True)
 
     def forward(self, inputs):
-        outputs = self.conv1(inputs)
-        outputs = self.conv2(outputs)
+        outputs = self.conv_bn_relu1(inputs)
+        outputs = self.conv_bn_relu2(outputs)
         unpooled_shape = outputs.size()
         outputs, indices = self.maxpool(outputs)
 
@@ -98,15 +98,15 @@ class encoder_conv3(nn.Module):
     def __init__(self, in_channels, out_channels):
         super(encoder_conv3, self).__init__()
 
-        self.conv1 = Conv2dBatchNormRelu(in_channels, out_channels, 3)
-        self.conv2 = Conv2dBatchNormRelu(out_channels, out_channels, 3)
-        self.conv3 = Conv2dBatchNormRelu(out_channels, out_channels, 3)
+        self.conv_bn_relu1 = Conv2dBatchNormRelu(in_channels, out_channels, 3)
+        self.conv_bn_relu2 = Conv2dBatchNormRelu(out_channels, out_channels, 3)
+        self.conv_bn_relu3 = Conv2dBatchNormRelu(out_channels, out_channels, 3)
         self.maxpool = nn.MaxPool2d(2, return_indices=True)
 
     def forward(self, inputs):
-        outputs = self.conv1(inputs)
-        outputs = self.conv2(outputs)
-        outputs = self.conv3(outputs)
+        outputs = self.conv_bn_relu1(inputs)
+        outputs = self.conv_bn_relu2(outputs)
+        outputs = self.conv_bn_relu3(outputs)
         unpooled_shape = outputs.size()
         outputs, indices = self.maxpool(outputs)
 
@@ -118,13 +118,13 @@ class decoder_conv2(nn.Module):
         super(decoder_conv2, self).__init__()
 
         self.unpool = nn.MaxUnpool2d(2)
-        self.conv1 = Conv2dBatchNormRelu(in_channels, in_channels, 3)
-        self.conv2 = Conv2dBatchNormRelu(in_channels, out_channels, 3)
+        self.conv_bn_relu1 = Conv2dBatchNormRelu(in_channels, in_channels, 3)
+        self.conv_bn_relu2 = Conv2dBatchNormRelu(in_channels, out_channels, 3)
 
     def forward(self, inputs, indices, output_shape):
         outputs = self.unpool(inputs, indices, output_size=output_shape)
-        outputs = self.conv1(outputs)
-        outputs = self.conv2(outputs)
+        outputs = self.conv_bn_relu1(outputs)
+        outputs = self.conv_bn_relu2(outputs)
 
         return outputs
 
@@ -134,15 +134,15 @@ class decoder_conv3(nn.Module):
         super(decoder_conv3, self).__init__()
 
         self.unpool = nn.MaxUnpool2d(2)
-        self.conv1 = Conv2dBatchNormRelu(in_channels, in_channels, 3)
-        self.conv2 = Conv2dBatchNormRelu(in_channels, in_channels, 3)
-        self.conv3 = Conv2dBatchNormRelu(in_channels, out_channels, 3)
+        self.conv_bn_relu1 = Conv2dBatchNormRelu(in_channels, in_channels, 3)
+        self.conv_bn_relu2 = Conv2dBatchNormRelu(in_channels, in_channels, 3)
+        self.conv_bn_relu3 = Conv2dBatchNormRelu(in_channels, out_channels, 3)
 
     def forward(self, inputs, indices, output_shape):
         outputs = self.unpool(inputs, indices, output_size=output_shape)
-        outputs = self.conv1(outputs)
-        outputs = self.conv2(outputs)
-        outputs = self.conv3(outputs)
+        outputs = self.conv_bn_relu1(outputs)
+        outputs = self.conv_bn_relu2(outputs)
+        outputs = self.conv_bn_relu3(outputs)
 
         return outputs
 
@@ -152,12 +152,12 @@ class decoder_last(nn.Module):
         super(decoder_last, self).__init__()
 
         self.unpool = nn.MaxUnpool2d(2)
-        self.conv1 = Conv2dBatchNormRelu(in_channels, in_channels, 3)
+        self.conv_bn_relu1 = Conv2dBatchNormRelu(in_channels, in_channels, 3)
         self.conv2 = nn.Conv2d(in_channels, out_channels, 3, padding=1)
 
     def forward(self, inputs, indices, output_shape):
         outputs = self.unpool(inputs, indices, output_size=output_shape)
-        outputs = self.conv1(outputs)
+        outputs = self.conv_bn_relu1(outputs)
         outputs = self.conv2(outputs)
 
         return outputs

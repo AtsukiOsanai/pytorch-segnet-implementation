@@ -37,7 +37,7 @@ class fcn(nn.Module):
             if not isinstance(layer, nn.ReLU):
                 vgg16_layers.append(layer)
 
-        # extract the segnet encoder layer without ReLU
+        # extract the fcn encoder layer without ReLU
         target_layers = []
         blocks = [self.conv1,
                   self.conv2,
