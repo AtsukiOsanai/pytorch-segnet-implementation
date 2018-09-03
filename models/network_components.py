@@ -57,17 +57,21 @@ class BasicBlock(nn.Module):
     def __init__(self, in_channels, out_channels, down_sample=False):
         super(BasicBlock, self).__init__()
         self.down_sample = down_sample
-        self.residual1 = Conv2dBatchNormRelu(in_channels, out_channels, 3, bias=False)
-        self.residual2 = Conv2dBatchNorm(out_channels, out_channels, 3, bias=False)
-        if down_sample:
+        if self.down_sample:
+            self.residual1 = Conv2dBatchNormRelu(in_channels, out_channels, 3,
+                                                 stride=2, bias=False)
+            self.residual2 = Conv2dBatchNorm(out_channels, out_channels, 3, bias=False)
             self.shortcut = Conv2dBatchNorm(in_channels, out_channels, 1,
                                             stride=2, bias=False)
+        else:
+            self.residual1 = Conv2dBatchNormRelu(in_channels, out_channels, 3, bias=False)
+            self.residual2 = Conv2dBatchNorm(out_channels, out_channels, 3, bias=False)
         self.relu = nn.ReLU(inplace=True)
 
     def forward(self, inputs):
         outputs = self.residual1(inputs)
         outputs = self.residual2(outputs)
-        if down_sample:
+        if self.down_sample:
             shortcut = self.shortcut(inputs)
             outputs += shortcut
         else:
@@ -87,21 +91,28 @@ class Bottleneck(nn.Module):
     def __init__(self, in_channels, aux_channels, down_sample=False):
         super(Bottleneck, self).__init__()
         self.down_sample = down_sample
-        self.residual1 = Conv2dBatchNormRelu(in_channels, aux_channels, 1, bias=False)
-        self.residual2 = Conv2dBatchNormRelu(aux_channels, aux_channels, 3, bias=False)
-        self.residual3 = Conv2dBatchNorm(aux_channels,
+        if self.down_sample:
+            self.residual1 = Conv2dBatchNormRelu(in_channels, aux_channels, 1,
+                                                 stride=2, bias=False)
+            self.residual2 = Conv2dBatchNormRelu(aux_channels, aux_channels, 3, bias=False)
+            self.residual3 = Conv2dBatchNorm(aux_channels,
                                              aux_channels*self.expansion,
                                              1, bias=False)
-        if down_sample:
             self.shortcut = Conv2dBatchNorm(in_channels, aux_channels*self.expansion,
                                             1, stride=2, bias=False)
+        else:
+            self.residual1 = Conv2dBatchNormRelu(in_channels, aux_channels, 1, bias=False)
+            self.residual2 = Conv2dBatchNormRelu(aux_channels, aux_channels, 3, bias=False)
+            self.residual3 = Conv2dBatchNorm(aux_channels,
+                                             aux_channels*self.expansion,
+                                             1, bias=False)
         self.relu = nn.ReLU(inplace=True)
 
     def forward(self, inputs):
         outputs = self.residual1(inputs)
         outputs = self.residual2(outputs)
         outputs = self.residual3(outputs)
-        if down_sample:
+        if self.down_sample:
             shortcut = self.shortcut(inputs)
             outputs += shortcut
         else:

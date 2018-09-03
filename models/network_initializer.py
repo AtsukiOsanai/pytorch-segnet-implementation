@@ -1,4 +1,4 @@
-import torcn.nn as nn
+import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 from torchvision import models
 
@@ -36,10 +36,11 @@ class ResNet(nn.Module):
         self.conv_bn_relu = Conv2dBatchNormRelu(3, 64, 7, stride=2, padding=3, bias=False)
         self.max_pool = nn.MaxPool2d(3, stride=2, padding=1)
         # TODO Fix the channel mismatch
-        self.layer1 = self._make_layer(block, 64, 64, layers[0])
-        self.layer2 = self._make_layer(block, 256, 128, layers[1], down_sample=True)
-        self.layer3 = self._make_layer(block, 512, 256, layers[2], down_sample=True)
-        self.layer4 = self._make_layer(block, 1024, 512, layers[3], down_sample=True)
+        self.in_channels = 64
+        self.layer1 = self._make_layer(self.block, 64, self.layers[0])
+        self.layer2 = self._make_layer(self.block, 128, self.layers[1], down_sample=True)
+        self.layer3 = self._make_layer(self.block, 256, self.layers[2], down_sample=True)
+        self.layer4 = self._make_layer(self.block, 512, self.layers[3], down_sample=True)
         self.avgpool = nn.AvgPool2d(7, stride=1)
 
         for m in self.modules():
@@ -49,11 +50,12 @@ class ResNet(nn.Module):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
 
-    def _make_layer(self, block, in_channels, aux_channels, num_layers, down_sample=False):
+    def _make_layer(self, block, aux_channels, num_layers, down_sample=False):
         layers = []
-        layers.append(block(in_channels, aux_channels, down_sample))
+        layers.append(block(self.in_channels, aux_channels, down_sample))
         for i in range(1, num_layers):
             layers.append(block(aux_channels * block.expansion, aux_channels))
+        self.in_channels = aux_channels * block.expansion
 
         return nn.Sequential(*layers)
 
@@ -84,10 +86,7 @@ class ResNet(nn.Module):
                         units = [block[i].residual1, block[i].residual2]
                     elif self.block == "Bottleneck":
                         units = [block[i].residual1, block[i].residual2, block[i].residual3]
-            else:
-
-                units = [block.]
-            for i in range(len(self.layers)):
+            #else:
 
 
 
