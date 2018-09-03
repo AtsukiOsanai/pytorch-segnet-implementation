@@ -1,8 +1,8 @@
 # pytorch-semseg-implementation  
 This repository is for personal study about semantic-segmentation.  
-Many parts of here refers to meetshah1995/pytorch-semseg repository.  
-https://github.com/meetshah1995/pytorch-semseg.git  
-Threfore, I recommend to clone reopository above instead of this repository.  
+I refer to other repositories cited in References,
+so you should check their contributions too.  
+
 
 ### Implemented  
 - Fully Convolutional Networks  
@@ -17,3 +17,10 @@ http://lmb.informatik.uni-freiburg.de/
 
 - PSP net  
 https://github.com/hszhao/PSPNet  
+
+### References
+- meetshah1995/pytorch-semseg  
+https://github.com/meetshah1995/pytorch-semseg.git  
+
+- Lextal/pspnet-pytorch  
+https://github.com/Lextal/pspnet-pytorch.git  

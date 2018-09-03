@@ -61,34 +61,50 @@ class ResNet(nn.Module):
 
     def init_pretrained(self):
         pretrained_params = model_zoo.load_url(self.model_url)
+        # extract trainable parameter keys from pre-trained model
+        param_keys, conv_keys, bn_keys = [], [], []
+        bn_idx = 0
+        for key in list(pretrained_params.keys()):
+            if "conv" in key or "downsample.0" in key:
+                conv_keys.append(key)
+                param_keys.append(conv_keys)
+                conv_keys = []
+            elif "bn" in key or "downsample.1" in key:
+                bn_keys.append(key)
+                bn_idx += 1
+                if bn_idx == 4:
+                    param_keys.append(bn_keys)
+                    bn_idx = 0
+                    bn_keys = []
 
-
+        # extract trainable layers from defined model
         blocks = [self.conv_bn_relu,
                   self.layer1,
                   self.layer2,
                   self.layer3,
                   self.layer4]
         target_layers = []
-        for idx, block in enumerate(model.layer1):
-            for unit in list(block.children()):
-                for layer in list(unit.children()):
-                    print(layer)
-                    target_layers.append(layer)
-
-
-            if idx == 0:
+        for idx, block in enumerate(blocks):
+            if idx < 1:
                 for layer in block.children():
                     if not isinstance(layer, nn.ReLU):
                         target_layers.append(layer)
-            elif idx == 1:
-                for i in self.layers[idx-1]:
-                    if self.block == "BasicBlock":
-                        units = [block[i].residual1, block[i].residual2]
-                    elif self.block == "Bottleneck":
-                        units = [block[i].residual1, block[i].residual2, block[i].residual3]
-            #else:
-
-
+            else:
+                for unit in list(block.children()):
+                    for layers in list(unit.children()):
+                        for layer in layers.children():
+                            if not isinstance(layer, nn.ReLU) and \
+                               not isinstance(layer, nn.AvgPool2d):
+                                target_layers.append(layer)
+        # assign the pre-trained weights into the defined model
+        for layer, key in zip(target_layers, param_keys):
+            if len(key) == 1:  # conv
+                layer.weight.data = pretrained_params[key[0]]
+            else:  # bn
+                layer.running_mean.data = pretrained_params[key[0]]
+                layer.running_var.data = pretrained_params[key[1]]
+                layer.weight.data = pretrained_params[key[2]]
+                layer.bias.data = pretrained_params[key[3]]
 
     def forward(self, inputs):
         outputs = self.conv_bn_relu(inputs)
