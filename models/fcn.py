@@ -82,7 +82,7 @@ class fcn32s(fcn):
         if self.learned_bilinear:
             scores = self.upsample(scores)
         else:
-            scores = nn.functinal.interpolate(
+            scores = nn.functional.interpolate(
                 scores, size=inputs.size()[2:], mode='bilinear')
 
         scores = self.softmax(scores)
