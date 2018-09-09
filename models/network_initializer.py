@@ -26,7 +26,12 @@ resnet_config = {"resnet18": {"block": BasicBlock,
 class ResNet(nn.Module):
     """
     ResNet parent class as a feature extractor
+    # TODO
+    - Adding dilated resnet feature extractor.
+      This causes the model transfer operation from caffe model.
     """
+
+
     def __init__(self, resnet_type):
         super(ResNet, self).__init__()
         self.block = resnet_config[resnet_type]["block"]
@@ -106,13 +111,16 @@ class ResNet(nn.Module):
                 layer.weight.data = pretrained_params[key[2]]
                 layer.bias.data = pretrained_params[key[3]]
 
-    def forward(self, inputs):
+    def forward(self, inputs, output_aux=False):
         outputs = self.conv_bn_relu(inputs)
         outputs = self.max_pool(outputs)
         outputs = self.layer1(outputs)
         outputs = self.layer2(outputs)
-        outputs = self.layer3(outputs)
-        outputs = self.layer4(outputs)
+        aux = self.layer3(outputs)
+        outputs = self.layer4(aux)
         outputs = self.avgpool(outputs)
 
-        return outputs
+        if outputs_aux:
+            return aux, outputs
+        else:
+            return outputs
