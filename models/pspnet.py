@@ -55,6 +55,7 @@ class pspnet_pure(nn.Module):
         else:
             return outputs
 
+
 class PyramidPoolingModule(nn.Module):
     def __init__(self, in_channels, sizes=(1, 2, 3, 6)):
         super(PyramidPoolingModule, self).__init__()
