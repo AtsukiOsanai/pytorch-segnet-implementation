@@ -22,8 +22,6 @@ class segnet(nn.Module):
         self.decoder2 = decoder_conv2(128, 64)
         self.decoder1 = decoder_last(64, n_classes)
 
-        self.softmax = nn.Softmax(dim=1)
-
     def forward(self, inputs):
         # Encoder
         outputs, indices_1, unpool_shape1 = self.encoder1(inputs)
@@ -33,13 +31,11 @@ class segnet(nn.Module):
         outputs, indices_5, unpool_shape5 = self.encoder5(outputs)
 
         # Decoder
-        outputs = self.decode5(outputs, indices_5, unpool_shape5)
-        outputs = self.decode4(outputs, indices_4, unpool_shape4)
-        outputs = self.decode3(outputs, indices_3, unpool_shape3)
-        outputs = self.decode2(outputs, indices_2, unpool_shape2)
-        outputs = self.decode1(outputs, indices_1, unpool_shape1)
-
-        outputs = self.softmax(outputs)
+        outputs = self.decoder5(outputs, indices_5, unpool_shape5)
+        outputs = self.decoder4(outputs, indices_4, unpool_shape4)
+        outputs = self.decoder3(outputs, indices_3, unpool_shape3)
+        outputs = self.decoder2(outputs, indices_2, unpool_shape2)
+        outputs = self.decoder1(outputs, indices_1, unpool_shape1)
 
         return outputs
 
@@ -49,7 +45,7 @@ class segnet(nn.Module):
         vgg16bn_features = list(vgg16bn.features.children())
         vgg16bn_layers = []
         for layer in vgg16bn_features:
-            if not isinstance(layer, nn.ReLU):
+            if not isinstance(layer, nn.ReLU) and not isinstance(layer, nn.MaxPool2d):
                 vgg16bn_layers.append(layer)
 
         # extract the segnet encoder layer without ReLU
